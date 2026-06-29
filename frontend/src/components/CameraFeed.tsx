@@ -1,7 +1,11 @@
 import { useEffect, useRef } from 'react';
 
-const CameraFeed = () => {
-    const videoRef = useRef < HTMLVideoElement > (null);
+interface CameraFeedProps {
+    setVideoElement: (el: HTMLVideoElement | null) => void;
+}
+
+const CameraFeed = ({ setVideoElement }: CameraFeedProps) => {
+    const videoRef = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
         const startCamera = async () => {
@@ -25,6 +29,10 @@ const CameraFeed = () => {
 
         startCamera();
 
+        if (videoRef.current) {
+            setVideoElement(videoRef.current);
+        }
+
         // Cleanup function to stop the camera when the component unmounts
         return () => {
             if (videoRef.current?.srcObject) {
@@ -32,7 +40,7 @@ const CameraFeed = () => {
                 stream.getTracks().forEach(track => track.stop());
             }
         };
-    }, []);
+    }, [setVideoElement]);
 
     return (
         <video
@@ -40,8 +48,8 @@ const CameraFeed = () => {
             autoPlay
             playsInline
             muted
-            className="w-full h-full object-cover"
-        />  
+            className="w-full h-full object-cover hidden"
+        />
     );
 };
 
