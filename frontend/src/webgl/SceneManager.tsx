@@ -6,10 +6,13 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 
 interface SceneManagerProps {
     videoElement: HTMLVideoElement | null;
+    bloomStrength: number;
+    bloomThreshold: number;
 }
 
-const SceneManager = ({ videoElement }: SceneManagerProps) => {
+const SceneManager = ({ videoElement, bloomStrength, bloomThreshold }: SceneManagerProps) => {
     const mountRef = useRef<HTMLDivElement>(null);
+    const bloomPassRef = useRef<UnrealBloomPass | null>(null);
 
     useEffect(() => {
         if (!videoElement || !mountRef.current) return;
@@ -17,9 +20,10 @@ const SceneManager = ({ videoElement }: SceneManagerProps) => {
         // Set up the Three.js scene
         const scene = new THREE.Scene();
         const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.toneMapping = THREE.ReinhardToneMapping; // Reinhard tone mapping for modern lighting/colour calculations
+        renderer.toneMapping = THREE.ACESFilmicToneMapping; // ACES Filmic tone mappping for better color grading
+        renderer.toneMappingExposure = 0.8; // Darken base scene so bloom doesn't overpower
         mountRef.current.appendChild(renderer.domElement);
 
         // Map the video feed to a texture
@@ -40,10 +44,11 @@ const SceneManager = ({ videoElement }: SceneManagerProps) => {
         // Second pass: Apply bloom (glow) effect
         const bloomPass = new UnrealBloomPass(
             new THREE.Vector2(window.innerWidth, window.innerHeight),
-            1.5, // Strength of bloom/glow effect
+            bloomStrength, // Strength of bloom/glow effect
             0.4, // Radius (how far glow spreads)
-            0.8 // Threshold (how bright a pixel needs to be to trigger the glow)
+            bloomThreshold // Threshold (how bright a pixel needs to be to trigger the glow)
         );
+        bloomPassRef.current = bloomPass;
         composer.addPass(bloomPass);
 
         // Render loop
@@ -68,6 +73,13 @@ const SceneManager = ({ videoElement }: SceneManagerProps) => {
             mountRef.current?.removeChild(renderer.domElement);
         };
     }, [videoElement]);
+
+    useEffect(() => {
+        if (bloomPassRef.current) {
+            bloomPassRef.current.strength = bloomStrength;
+            bloomPassRef.current.threshold = bloomThreshold;
+        }
+    }, [bloomStrength, bloomThreshold]);
 
     return <div ref={mountRef} className="absolute inset-0 z-0" />;
 };
