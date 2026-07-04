@@ -21,6 +21,8 @@ const CameraFeed = ({ setVideoElement }: CameraFeedProps) => {
 
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
+                    await videoRef.current.play();
+                    setVideoElement(videoRef.current);
                 }
             } catch (err) {
                 console.error("Camera access denied or unavailable:", err);
@@ -29,16 +31,13 @@ const CameraFeed = ({ setVideoElement }: CameraFeedProps) => {
 
         startCamera();
 
-        if (videoRef.current) {
-            setVideoElement(videoRef.current);
-        }
-
         // Cleanup function to stop the camera when the component unmounts
         return () => {
             if (videoRef.current?.srcObject) {
                 const stream = videoRef.current.srcObject as MediaStream;
                 stream.getTracks().forEach(track => track.stop());
             }
+            setVideoElement(null);
         };
     }, [setVideoElement]);
 
@@ -48,7 +47,7 @@ const CameraFeed = ({ setVideoElement }: CameraFeedProps) => {
             autoPlay
             playsInline
             muted
-            className="w-full h-full object-cover hidden"
+            className="w-full h-full object-cover opacity-0"
         />
     );
 };
