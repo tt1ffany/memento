@@ -24,6 +24,7 @@ const SceneManager = ({ videoElement, bloomStrength, bloomThreshold }: SceneMana
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.toneMapping = THREE.ACESFilmicToneMapping; // ACES Filmic tone mappping for better color grading
         renderer.toneMappingExposure = 0.8; // Darken base scene so bloom doesn't overpower
+        renderer.domElement.id = 'digicam-canvas';
         mountRef.current.appendChild(renderer.domElement);
 
         // Map the video feed to a texture
