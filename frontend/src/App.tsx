@@ -21,6 +21,23 @@ function App() {
     }
   }
 
+  const handleDownload = () => {
+    if (!capturedImage) return;
+
+    // Format timestamp: YYYY-MM-DD_HH-MM-SS
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const ts = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+
+    const link = document.createElement('a');
+    link.href = capturedImage;
+    link.download = `memento_${ts}.jpg`; // Filename
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
   return (
     <div
       className="relative w-screen overflow-hidden bg-black"
@@ -39,12 +56,19 @@ function App() {
             alt="Captured"
             className="w-full max-w-md rounded-lg shadow-[8px_8px_0px_rgba(244,114,182,1)] border-4 border-pink-400 object-cover aspect-[3/4]"
           />
-          <button
-            onClick={() => setCapturedImage(null)}
-            className="mt-8 px-6 py-3 bg-pink-400 text-white font-mono rounded shadow-[4px_4px_0px_rgba(236,72,153,1)] active:shadow-none active:translate-y-1 active:translate-x-1"
-          >
-            Take Another
-          </button>
+          <div className="flex gap-4 mt-8">
+            <button
+              onClick={() => setCapturedImage(null)}
+              className="px-6 py-3 bg-white text-pink-500 border-2 border-pink-400 font-mono rounded shadow-[4px_4px_0px_rgba(236,72,153,1)] active:shadow-none active:translate-y-1 active:translate-x-1"          >
+              Retake
+            </button>
+            <button
+              onClick={handleDownload}
+              className="px-6 py-3 bg-pink-400 text-white font-mono rounded shadow-[4px_4px_0px_rgba(244,114,182,1)] active:shadow-none active:translate-y-1 active:translate-x-1"
+            >
+              Save to Device
+            </button>
+          </div>
         </div>
       ) : (
         <>
@@ -63,7 +87,7 @@ function App() {
               className="absolute left-0 w-full flex items-end justify-center pointer-events-none"
               style={{ bottom: 'calc(2rem + env(safe-area-inset-bottom))' }}
             >
-                <div className="pointer-events-auto flex flex-col items-center gap-3">
+              <div className="pointer-events-auto flex flex-col items-center gap-3">
                 {/* Filter toggle */}
                 <button
                   onClick={() => setShowFilters((s) => !s)}
