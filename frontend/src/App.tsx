@@ -11,6 +11,9 @@ function App() {
   const [bloomThreshold, setBloomThreshold] = useState(0.8);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const handleCapture = () => {
     const canvas = document.getElementById('digicam-canvas') as HTMLCanvasElement;
@@ -19,7 +22,7 @@ function App() {
       const imageData = canvas.toDataURL('image/jpeg', 0.95); // 1.0 for maximum quality
       setCapturedImage(imageData);
     }
-  }
+  };
 
   const handleDownload = () => {
     if (!capturedImage) return;
@@ -36,7 +39,38 @@ function App() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  }
+  };
+
+  const handleUpload = async () => {
+    if (!capturedImage) return;
+
+    setIsUploading(true);
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          photo_url: capturedImage, // Matches Pydantic model field name exactly
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.status === 'success') {
+        alert('Success! Backend acknowledged receipt of the photo.');
+        console.log('Backend response:', data);
+      } else {
+        alert(`Server Error: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Network request failed:', error);
+      alert('Failed to connect to the backend server. Is Uvicorn running?');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   return (
     <div
@@ -67,6 +101,13 @@ function App() {
               className="px-6 py-3 bg-pink-400 text-white font-mono rounded shadow-[4px_4px_0px_rgba(244,114,182,1)] active:shadow-none active:translate-y-1 active:translate-x-1"
             >
               Save to Device
+            </button>
+            <button 
+              onClick={handleUpload}
+              disabled={isUploading}
+              className="w-full px-6 py-3 bg-pink-500 text-white font-mono rounded shadow-[4px_4px_0px_rgba(147,51,234,1)] active:shadow-none active:translate-y-1 active:translate-x-1 disabled:bg-pink-300 transition-all uppercase font-bold text-center"
+            >
+              {isUploading ? 'Uploading to Server...' : 'Upload to Cloud'}
             </button>
           </div>
         </div>
